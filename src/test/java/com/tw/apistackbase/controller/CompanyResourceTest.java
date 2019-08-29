@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -34,51 +35,73 @@ public class CompanyResourceTest {
 	@Autowired
 	private ObjectMapper ObjectMapper;
 
-	@Test
-	public void shouldReturnCompanyList() throws Exception {
-		Companies companies = new Companies();
-		String getString = ObjectMapper.writeValueAsString(companies.getCompanies());
-		this.mockMvc.perform(get("/companies")).andDo(print()).andExpect(status().isOk())
-				.andExpect(content().json(getString));
-	}
+	 @Test
+	 public void shouldReturnCompanyList() throws Exception {
+	 Companies companies = new Companies();
+	 String getString = ObjectMapper.writeValueAsString(companies.getCompanies());
+	 this.mockMvc.perform(get("/companies")).andDo(print()).andExpect(status().isOk())
+	 .andExpect(content().json(getString));
+	 }
+	
+	 @Test
+	 public void shouldReturnCompany0f1() throws Exception {
+	 Companies companies = new Companies();
+	 String getString =
+	 ObjectMapper.writeValueAsString(companies.getCompanies().get(0));
+	 this.mockMvc.perform(get("/companies/" +
+	 1)).andDo(print()).andExpect(status().isOk())
+	 .andExpect(content().json(getString));
+	 }
+	
+	 @Test
+	 public void shouldReturnCompanyEmployees() throws Exception {
+	 Companies companies = new Companies();
+	 String getString =
+	 ObjectMapper.writeValueAsString(companies.getCompanies().get(0).getEmployees());
+	 this.mockMvc.perform(get("/companies/" + 1 +
+	 "/employees")).andDo(print()).andExpect(status().isOk())
+	 .andExpect(content().json(getString));
+	 }
+	
+	 @Test
+	 public void shouldReturnCompanyListqueryCompaniesWithPageAndPageSize() throws
+	 Exception {
+	 Companies companies = new Companies();
+	 String getString = ObjectMapper.writeValueAsString(companies.getCompanies());
+	 this.mockMvc.perform(get("/companies/?page=" + 1 + "&pageSize=" +
+	 5)).andDo(print()).andExpect(status().isOk())
+	 .andExpect(content().json(getString));
+	 }
+	
+	 @Test
+	 @AfterAll
+	 public void shouldReturnCreateCompany() throws Exception {
+	 Company company = new Company(3, "asfas", new Employees().getEmployees());
+	 String postString = ObjectMapper.writeValueAsString(company);
+	 this.mockMvc
+	 .perform(
+	 MockMvcRequestBuilders.post("/companies")
+	 .contentType(MediaType.APPLICATION_JSON)
+	 .content(postString))
+	 .andDo(print())
+	 .andExpect(status().isCreated())
+	 .andExpect(content().json(postString));
+	 }
+	
 
 	@Test
-	public void shouldReturnCompany0f1() throws Exception {
+	@AfterTransaction
+	public void shouldReturnUpdateCompany() throws Exception {
 		Companies companies = new Companies();
-		String getString = ObjectMapper.writeValueAsString(companies.getCompanies().get(0));
-		this.mockMvc.perform(get("/companies/" + 1)).andDo(print()).andExpect(status().isOk())
-				.andExpect(content().json(getString));
-	}
-
-	@Test
-	public void shouldReturnCompanyEmployees() throws Exception {
-		Companies companies = new Companies();
-		String getString = ObjectMapper.writeValueAsString(companies.getCompanies().get(0).getEmployees());
-		this.mockMvc.perform(get("/companies/" + 1 + "/employees")).andDo(print()).andExpect(status().isOk())
-				.andExpect(content().json(getString));
-	}
-
-	@Test
-	public void shouldReturnCompanyListqueryCompaniesWithPageAndPageSize() throws Exception {
-		Companies companies = new Companies();
-		String getString = ObjectMapper.writeValueAsString(companies.getCompanies());
-		this.mockMvc.perform(get("/companies/?page=" + 1 + "&pageSize=" + 5)).andDo(print()).andExpect(status().isOk())
-				.andExpect(content().json(getString));
-	}
-
-	@Test
-	@AfterAll
-	public void shouldReturnCreateCompany() throws Exception {
-		Company company = new Company(3, "asfas", new Employees().getEmployees());
+		Company company = companies.getCompanies().get(0);
+		company.setCompanyName("sfdfv");
 		String postString = ObjectMapper.writeValueAsString(company);
 		this.mockMvc
 				.perform(
-						MockMvcRequestBuilders.post("/companies")
+						MockMvcRequestBuilders.put("/companies/" + 1)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(postString))
-				        .andDo(print())
-				        .andExpect(status().isCreated())
-				        .andExpect(content().json(postString));
+				.andDo(print()).andExpect(status().isOk()).andExpect(content().json(postString));
 	}
-	
+
 }
